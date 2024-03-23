@@ -1,45 +1,65 @@
-const movies = require('../dataMock/movies');
+const { PrismaClient } = require('@prisma/client')
 const NotFoundError = require('../errors/NotFoundError');
 
-const getAllMovies = (req, res) => {
-  res.status(200).json({
-    data: movies,
-  });
-};
+const prisma = new PrismaClient();
 
-const getMovieById = (req, res, next) => {
+const getAllMovies = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const allMovies = await prisma.movie.findMany({
+      include: {
+        director: true,
+      },
+    });
 
-    const movie = movies.filter((item) => item.id === id);
-
-    if (movie.length === 0) {
-      throw new NotFoundError('Movie tidak ditemukan');
-    }
-
-    res.status(200).json({
-      data: movie,
+    return res.status(200).json({
+      message: 'Success',
+      data: allMovies,
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 };
 
-const addMovie = (req, res, next) => {
+const getMovieById = async (req, res, next) => {
   try {
-    const { id, title, genre } = req.body;
+    const { id } = req.params;
 
-    movies.push({
-      id,
-      title,
-      genre,
+    const movie = await prisma.movie.findUnique({
+      where: {
+        id: parseInt(id, 10),
+      },
+      include: {
+        director: true,
+      },
     });
 
-    res.status(201).json({
-      message: 'Movie berhasil ditambahakan',
+    if (!movie) {
+      throw new NotFoundError('Movie tidak ditemukan');
+    }
+
+    return res.status(200).json({
+      message: 'Success',
+      data: movie,
     });
   } catch (error) {
-    next(error);
+    return next(error);
+  }
+};
+
+const addMovie = async (req, res, next) => {
+  try {
+    const movie = req.body;
+
+    const newMovie = await prisma.movie.create({
+      data: movie,
+    });
+
+    return res.status(201).json({
+      message: 'Movie berhasil ditambahakan',
+      data: newMovie,
+    });
+  } catch (error) {
+    return next(error);
   }
 };
 

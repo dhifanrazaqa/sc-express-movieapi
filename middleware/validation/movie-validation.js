@@ -2,12 +2,12 @@ const Joi = require('joi');
 const ClientError = require('../../errors/ClientError');
 
 const schema = Joi.object({
-  id: Joi.string()
-    .required(),
   title: Joi.string()
     .min(3)
     .required(),
   genre: Joi.string()
+    .required(),
+  directorId: Joi.number()
     .required(),
 });
 
